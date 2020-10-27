@@ -69,16 +69,19 @@ negative_ages = [
 
 
 def is_invalid(request_bear, result):
-    result.pop('bear_id')
     errors = list()
-    if result != request_bear:
-        for item in ['bear_type', 'bear_name', 'bear_age']:
-            if result.get(item) != request_bear.get(item):
-                errors.append(f'Incorrect {item}! Expected: {request_bear.get(item)}, got: {result.get(item)}')
-            result.pop(item)
-            request_bear.pop(item)
-        if result:
-            errors.append(f'There is excess keys founded in result: {result.keys()}')
+    if type(result) == dict:
+        result.pop('bear_id')
+        if result != request_bear:
+            for item in ['bear_type', 'bear_name', 'bear_age']:
+                if result.get(item) != request_bear.get(item):
+                    errors.append(f'Incorrect {item}! Expected: {request_bear.get(item)}, got: {result.get(item)}')
+                result.pop(item)
+                request_bear.pop(item)
+            if result:
+                errors.append(f'There is excess keys founded in result: {result.keys()}')
+    else:
+        errors.append(f'Incorrect type of result: {type(result)}, result: {result}')
     return errors, 'errors occurred:\n{}'.format('\n'.join(errors))
 
 
@@ -86,19 +89,21 @@ def is_invalid(request_bear, result):
 @pytest.mark.parametrize("name", positive_names)
 @pytest.mark.parametrize("age", positive_ages)
 @pytest.mark.usefixtures('single_bear')
+@pytest.mark.xfail
 def test_positive_update(api, bear_type, name, age):
     bear_id = api.get_all_bears()[0].get('bear_id')
     update_bear = {'bear_type': bear_type, 'bear_name': name, 'bear_age': age}
     api.update_specific_bear(bear_id, update_bear)
     updated_bear = api.get_specific_bear(bear_id)
     errors = is_invalid(update_bear, updated_bear)
-    assert errors, 'errors occurred:\n{}'.format('\n'.join(errors))
+    assert not errors, 'errors occurred:\n{}'.format('\n'.join(errors))
 
 
 @pytest.mark.parametrize("bear_type", negative_types)
 @pytest.mark.parametrize("name", negative_names)
 @pytest.mark.parametrize("age", negative_ages)
 @pytest.mark.usefixtures('single_bear')
+@pytest.mark.xfail
 def test_negative_update(api, bear_type, name, age):
     bear_id = api.get_all_bears()[0].get('bear_id')
     update_bear = {'bear_type': bear_type, 'bear_name': name, 'bear_age': age}
@@ -108,10 +113,11 @@ def test_negative_update(api, bear_type, name, age):
         errors.append(f'Update request returned code {status_code}')
     updated_bear = api.get_specific_bear(bear_id)
     errors.append(is_invalid(update_bear, updated_bear))
-    assert errors, 'errors occurred:\n{}'.format('\n'.join(errors))
+    assert not errors, 'errors occurred:\n{}'.format('\n'.join(errors))
 
 
 @pytest.mark.usefixtures('single_bear')
+@pytest.mark.xfail
 def test_update_mixed_values(api):
     # try to simultaneously update two parameters - first with valid value, second - with invalid
     bear_id = api.get_all_bears()[0].get('bear_id')
@@ -126,6 +132,7 @@ def test_update_mixed_values(api):
 
 
 @pytest.mark.usefixtures('single_bear')
+@pytest.mark.xfail
 def test_update_not_existed_param(api):
     bear_id = api.get_all_bears()[0].get('bear_id')
     update_bear = {'not_existed_param': 'test'}
@@ -143,6 +150,7 @@ def test_update_not_existed_param(api):
 
 # I think system should ignore not existed keys and update only
 @pytest.mark.usefixtures('single_bear')
+@pytest.mark.xfail
 def test_update_existed_and_not_existed_key(api):
     bear_id = api.get_all_bears()[0].get('bear_id')
     update_bear = {'not_existed_param': 'test'}
@@ -159,6 +167,7 @@ def test_update_existed_and_not_existed_key(api):
 
 
 @pytest.mark.usefixtures('two_bears')
+@pytest.mark.xfail
 def test_update_bear_to_make_identical(api):
     bears = api.get_all_bears()
     bear_id = bears[1].get('bear_id')
@@ -168,6 +177,7 @@ def test_update_bear_to_make_identical(api):
     errors = list()
     if status_code != 200:
         errors.append(f'Update request returned code {status_code}')
+    assert not errors, 'errors occurred:\n{}'.format('\n'.join(errors))
 
 
 if __name__ == '__main__':

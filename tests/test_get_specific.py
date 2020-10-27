@@ -2,6 +2,7 @@ import pytest
 
 
 @pytest.mark.usefixtures('single_bear')
+@pytest.mark.xfail
 def test_get_existed_bear(api):
     bear_id = api.get_all_bears()[0].get('bear_id')
     hacked_bear = api.get_specific_bear_hack(bear_id)
@@ -33,7 +34,7 @@ def test_get_never_existent_bear(api):
     bear = api.get_specific_bear(int(bear_id) + 1)
     if bear != 'EMPTY':
         errors.append(f'There is incorrect bear got: {bear}')
-    assert errors, 'errors occurred:\n{}'.format('\n'.join(errors))
+    assert not errors, 'errors occurred:\n{}'.format('\n'.join(errors))
 
 
 @pytest.mark.usefixtures('single_bear')

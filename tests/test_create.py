@@ -1,11 +1,7 @@
+import pytest
 import random
 import string
 
-import pytest
-# import sys, os
-# myPath = os.path.dirname(os.path.abspath(__file__))
-# sys.path.insert(0, myPath + '/../')
-# print(sys.path)
 
 url = '0.0.0.0'
 port = '8091'
@@ -56,6 +52,7 @@ negative_names = [
 
 positive_ages = [
         0.0,
+        0.0001,
         0.2,
         1.0,
         10.0
@@ -78,25 +75,17 @@ negative_ages = [
 def generate_valid_bears(amount):
     result = list()
     for c in range(amount):
-        result.append({"bear_type": get_type(), "bear_name": get_name(), "bear_age": get_age()})
+        result.append({
+            "bear_type": random.choice(['POLAR', 'BROWN', 'BLACK', 'GUMMY']),
+            "bear_name": ''.join(random.choice(string.ascii_uppercase) for _ in range(5)),
+            "bear_age": random.uniform(0.0, 50.0)  # because bears cannot living more than 50 years
+        })
     return result
-
-
-def get_type():
-    return random.choice(['POLAR', 'BROWN', 'BLACK', 'GUMMY'])
-
-
-def get_age():
-    return random.uniform(0.0, 50.0)  # because bears cannot living
-
-
-def get_name():
-    return ''.join(random.choice(string.ascii_uppercase) for _ in range(5))
 
 
 def is_not_single(bears):
     if len(bears) != 1:
-        return f"Incorrect lenght of response! Expected 1, got {len(bears)}"
+        return f"Incorrect length of response! Expected 1, got {len(bears)}"
     else:
         return ''
 
@@ -124,7 +113,7 @@ def test_positive_create_single_bear(api, bear_type, name, age):
     api.create_bear(insert_bear)
     bears = api.get_all_bears()
     errors = is_invalid(insert_bear, bears[0])
-    assert not any([is_not_single(bears), errors]), 'errors occured:\n{}'.format('\n'.join(errors))
+    assert not any([is_not_single(bears), errors]), 'errors occurred:\n{}'.format('\n'.join(errors))
 
 
 @pytest.mark.parametrize("bear_type", negative_types)
@@ -137,7 +126,7 @@ def test_negative_create_single_bear(api, bear_type, name, age):
     api.create_bear(insert_bear)
     bears = api.get_all_bears()
     errors = is_invalid(insert_bear, bears[0])
-    assert any([is_not_single(bears), errors]), 'errors occured:\n{}'.format('\n'.join(errors))
+    assert any([is_not_single(bears), errors]), 'errors occurred:\n{}'.format('\n'.join(errors))
 
 
 @pytest.mark.usefixtures('no_bears')
@@ -158,7 +147,7 @@ def test_create_identical_bears(api):
             for key in bears[0].keys():
                 if bears[0].get(key) != bears[1].get(key):
                     errors.append(f'Values for key {key} differs! bear0: {bears.get(key)}, bear1: {bears.get(key)}')
-    assert errors, 'errors occured:\n{}'.format('\n'.join(errors))
+    assert errors, 'errors occurred:\n{}'.format('\n'.join(errors))
 
 
 @pytest.mark.usefixtures('no_bears')
@@ -171,7 +160,7 @@ def test_less_params(api):
         assert not bears, f'Bear created incorrectly without important parameter {key}'
 
 
-# Probably we should ignore unknown fields in request json and if json have all neccessary fields - system should
+# Probably we should ignore unknown fields in request json and if json have all necessary fields - system should
 # creates bear. If not - this test invalid
 @pytest.mark.usefixtures('no_bears')
 def test_more_params(api):
@@ -181,7 +170,7 @@ def test_more_params(api):
     bears = api.get_all_bears()
     bear.pop("excess_parameter")
     errors = is_invalid(bear, bears[0])
-    assert not any([is_not_single(bears), errors]), 'errors occured:\n{}'.format('\n'.join(errors))
+    assert not any([is_not_single(bears), errors]), 'errors occurred:\n{}'.format('\n'.join(errors))
 
 
 if __name__ == '__main__':

@@ -14,10 +14,6 @@ positive_types = [
         'GUMMY'
     ]
 
-success_type = [
-    'POLAR'
-]
-
 negative_types = [
         'INCORRECT',
         None,
@@ -38,8 +34,6 @@ positive_names = [
         '!@#'
     ]
 
-success_name = ['BEAR']
-
 negative_names = [
         None,
         123,
@@ -57,10 +51,6 @@ positive_ages = [
         1.0,
         10.0
     ]
-
-success_age = [
-    10.0
-]
 
 negative_ages = [
        - 1000000,
@@ -113,20 +103,21 @@ def test_positive_create_single_bear(api, bear_type, name, age):
     api.create_bear(insert_bear)
     bears = api.get_all_bears()
     errors = is_invalid(insert_bear, bears[0])
-    assert not any([is_not_single(bears), errors]), 'errors occurred:\n{}'.format('\n'.join(errors))
+    assert not all([is_not_single(bears), errors]), 'errors occurred:\n{}'.format('\n'.join(errors))
 
 
 @pytest.mark.parametrize("bear_type", negative_types)
 @pytest.mark.parametrize("name", negative_names)
 @pytest.mark.parametrize("age", negative_ages)
 @pytest.mark.usefixtures('no_bears')
-@pytest.mark.xfail
 def test_negative_create_single_bear(api, bear_type, name, age):
     insert_bear = {'bear_type': bear_type, 'bear_name': name, 'bear_age': age}
     api.create_bear(insert_bear)
     bears = api.get_all_bears()
-    errors = is_invalid(insert_bear, bears[0])
-    assert any([is_not_single(bears), errors]), 'errors occurred:\n{}'.format('\n'.join(errors))
+    errors = list()
+    if len(bears) > 0:
+        errors.append(f'Bear {insert_bear} unexpectedly added to db')
+    assert not errors, 'errors occurred:\n{}'.format('\n'.join(errors))
 
 
 @pytest.mark.usefixtures('no_bears')
@@ -147,7 +138,7 @@ def test_create_identical_bears(api):
             for key in bears[0].keys():
                 if bears[0].get(key) != bears[1].get(key):
                     errors.append(f'Values for key {key} differs! bear0: {bears.get(key)}, bear1: {bears.get(key)}')
-    assert errors, 'errors occurred:\n{}'.format('\n'.join(errors))
+    assert not errors, 'errors occurred:\n{}'.format('\n'.join(errors))
 
 
 @pytest.mark.usefixtures('no_bears')

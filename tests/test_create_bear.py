@@ -97,7 +97,20 @@ def is_invalid(request_bear, result):
 @pytest.mark.parametrize("name", positive_names)
 @pytest.mark.parametrize("age", positive_ages)
 @pytest.mark.usefixtures('no_bears')
-def test_create_single_bear(api, bear_type, name, age):
+def test_positive_create_single_bear(api, bear_type, name, age):
+    insert_bear = {'bear_type': bear_type, 'bear_name': name, 'bear_age': age}
+    api.create_bear(insert_bear)
+    bears = api.get_all_bears()
+    errors = list()
+    assert not any([is_not_single(bears), is_invalid(insert_bear, bears[0])]), \
+        'errors occured:\n{}'.format('\n'.join(errors))
+
+@pytest.mark.parametrize("bear_type", negative_types)
+@pytest.mark.parametrize("name", negative_names)
+@pytest.mark.parametrize("age", negative_ages)
+@pytest.mark.usefixtures('no_bears')
+@pytest.mark.xfail
+def test_negative_create_single_bear(api, bear_type, name, age):
     insert_bear = {'bear_type': bear_type, 'bear_name': name, 'bear_age': age}
     api.create_bear(insert_bear)
     bears = api.get_all_bears()

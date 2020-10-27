@@ -1,3 +1,4 @@
+import math
 import pytest
 import random
 import string
@@ -21,6 +22,8 @@ negative_types = [
         ' ' * 200,
         True,
         123,
+        '[POLAR]',
+        '{POLAR}',
         ' ' * 500 + ';\n\n\n\n\n DROP TABLE bears;'
     ]
 
@@ -28,10 +31,16 @@ positive_names = [
         'mikhail',
         'Bear',
         'MISHA',
+        '   BEAR',
+        'Michael O`Bear',
+        'sir Bear-de-Grizly',
+        'BEAR   ',
+        '   BEAR   ',
         'ПЕТЯ',
         'Михайло Потапыч Медведев',
+        "".join(random.choice(string.ascii_lowercase) for i in range(100)),
         '123',
-        '!@#'
+        '!@#$%^&*():"{}/\|'
     ]
 
 negative_names = [
@@ -40,25 +49,42 @@ negative_names = [
         '',
         ' ' * 200,
         True,
+        {"2": "3"},
+        dict(),
+        list(),
+        '[NAME]',
+        '{NAME}',
         ' ' * 500 + ';\n\n\n\n\n DROP TABLE bears;'
     ]
 
 
 positive_ages = [
+        0,
         0.0,
         0.0001,
         0.2,
         1.0,
-        10.0
+        1,
+        10.0,
+        25.052,
+        50,
+        100
     ]
 
 negative_ages = [
-       - 1000000,
-       - 1.0,
-       - 0.1,
-       100,
-       None,
-       '123'
+        -1000,
+        - 1.0,
+        - 0.1,
+        100,
+        None,
+        True,
+        math.pi,
+        'one',
+        '',
+        [100],
+        {1: 10},
+        dict(),
+        list()
     ]
 
 
@@ -103,15 +129,37 @@ def test_positive_create_single_bear(api, bear_type, name, age):
     api.create_bear(insert_bear)
     bears = api.get_all_bears()
     errors = is_invalid(insert_bear, bears[0])
-    assert not all([is_not_single(bears), errors]), 'errors occurred:\n{}'.format('\n'.join(errors))
+    assert not any([is_not_single(bears), errors]), 'errors occurred:\n{}'.format('\n'.join(errors))
 
 
 @pytest.mark.parametrize("bear_type", negative_types)
+@pytest.mark.usefixtures('no_bears')
+def test_negative_type_create_single_bear(api, bear_type):
+    insert_bear = {'bear_type': bear_type, 'bear_name': 'MIKHAIL', 'bear_age': 17.5}
+    api.create_bear(insert_bear)
+    bears = api.get_all_bears()
+    errors = list()
+    if len(bears) > 0:
+        errors.append(f'Bear {insert_bear} unexpectedly added to db')
+    assert not errors, 'errors occurred:\n{}'.format('\n'.join(errors))
+
+
 @pytest.mark.parametrize("name", negative_names)
+@pytest.mark.usefixtures('no_bears')
+def test_negative_type_create_single_bear(api, name):
+    insert_bear = {'bear_type': 'POLAR', 'bear_name': name, 'bear_age': 17.5}
+    api.create_bear(insert_bear)
+    bears = api.get_all_bears()
+    errors = list()
+    if len(bears) > 0:
+        errors.append(f'Bear {insert_bear} unexpectedly added to db')
+    assert not errors, 'errors occurred:\n{}'.format('\n'.join(errors))
+
+
 @pytest.mark.parametrize("age", negative_ages)
 @pytest.mark.usefixtures('no_bears')
-def test_negative_create_single_bear(api, bear_type, name, age):
-    insert_bear = {'bear_type': bear_type, 'bear_name': name, 'bear_age': age}
+def test_negative_type_create_single_bear(api, age):
+    insert_bear = {'bear_type': 'POLAR', 'bear_name': 'MIKHAIL', 'bear_age': age}
     api.create_bear(insert_bear)
     bears = api.get_all_bears()
     errors = list()
@@ -156,10 +204,10 @@ def test_less_params(api):
 @pytest.mark.usefixtures('no_bears')
 def test_more_params(api):
     bear = generate_valid_bears(1)[0]
-    bear.update({"excess_parameter": "test"})
+    bear.update({"bear_mood": "happy"})
     api.create_bear(bear)
     bears = api.get_all_bears()
-    bear.pop("excess_parameter")
+    bear.pop("bear_mood")
     errors = is_invalid(bear, bears[0])
     assert not any([is_not_single(bears), errors]), 'errors occurred:\n{}'.format('\n'.join(errors))
 

@@ -3,3 +3,4 @@
 2. Run docker image with command `docker run -it -p 8091:8091 azshoo/alaska:1.0`
 3. Move to project directory and run tests with command `pytest --html=report.html`
 4. Test report will be stored to report.html in local directory, you can browse it with any html-viewer (e.g. `firefox report.html`)
+5. You can see checklist.ods in root-project dir.

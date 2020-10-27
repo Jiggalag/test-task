@@ -39,7 +39,7 @@ def no_bears(api):
 
 @pytest.fixture(scope='function')
 def many_bears(api):
-    create_bears(api, 50)
+    create_bears(api, 1000)
 
 
 @pytest.fixture(scope='function')

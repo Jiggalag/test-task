@@ -1,7 +1,6 @@
-import string
-
 import pytest
 import random
+import string
 from api_helper import BearAPI
 
 
